@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Все предложения | Сервис обратной связи</title>
+    
+    {% load static %}
+    {% load i18n %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</head>
+<style>
+    /* Добавим отступ справа для кнопки */
+    #filterBtn {
+        margin-bottom: 20px; /* Отступ снизу для кнопки */
+    }
+
+    /* Добавим отступ для самой панели фильтрации, чтобы она не налезала на контент */
+    #filterPanel {
+        margin-top: 10px;
+        margin-bottom: 30px; /* Отступ снизу для кнопки */
+    }
+
+    /* Применим отступ снизу для списка заявок, чтобы они не перекрывались с панелью фильтрации */
+    .list-group-item {
+        margin-bottom: 30px; /* Отступ снизу, чтобы кнопка и фильтрация не перекрывали контент */
+    }
+
+            /* Общий стиль для индикаторов */
+.status-indicator {
+    width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: gray; /* По умолчанию серый */
+  margin-right: 0px; /* Отступ между индикатором и текстом */
+    display: inline-block;
+}
+
+/* Стиль для каждого статуса */
+.status-new {
+    background-color: red; /* Новый */
+}
+
+.status-in-processing {
+    background-color: orange; /* В обработке */
+}
+
+.status-accepted {
+    background-color: green; /* Принята */
+}
+
+.status-rejected {
+    background-color: darkgray; /* Отклонена */
+}
+
+.status-default {
+    background-color: black; /* Если статус не задан */
+}
+</style>
+<header>
+    <!-- Здесь разместите содержимое вашей шапки сайта -->
+    {% include 'includes/header.html' %}
+    {% block title %}
+    {% endblock title %}
+  </header>
+<body>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Все предложения</h2>
+    </div>
+    <div>
+        <h5>
+            Всего:
+            {% if offers|length == 1 %}
+                1 запись
+            {% elif offers|length == 2 or offers|length == 3 or offers|length == 4 %}
+                {{ offers|length }} записи
+            {% else %}
+                {{ offers|length }} записей
+            {% endif %}
+        </h5>
+    </div>
+
+        <!-- Форма фильтрации -->
+        <div class="d-flex">
+            <button class="btn btn-dark ms-auto" id="filterBtn" style="margin-right: 10px;">Фильтрация</button>
+            <form method="get" id="exportForm" action="{% url 'feedback:export_users_xls' %}">
+                <input type="hidden" name="department" value="{{ request.GET.department }}">
+                <input type="hidden" name="status" value="{{ request.GET.status }}">
+                <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
+                <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+                <input type="hidden" name="anonymous" value="{{ request.GET.anonymous }}">
+                <input type="hidden" name="not_anonymous" value="{{ request.GET.not_anonymous }}">
+                <button type="submit" class="btn btn-success">Выгрузить в файл Excel</button>
+            </form>
+        </div>
+        
+        <div id="filterPanel" class="mt-3" style="display: none;">
+            {% if user.role == 'admin' or request.user.is_superuser %}
+        <form method="get" action="{% url 'feedback:all_offers' %}" class="d-flex mb-2" style="flex-wrap: wrap; gap: 20px; justify-content: center;">
+            <select name="department" class="form-select" aria-label="Выберите отдел" style="max-width: 700px; flex-grow: 2;">
+                <option value="">Все отделы</option>
+                <option value="accept" {% if request.GET.department == 'accept' %}selected{% endif %}>Здравпункт</option>
+                <option value="KD" {% if request.GET.department == 'KD' %}selected{% endif %}>Коммерческая дирекция (КД)</option>
+                <option value="OS" {% if request.GET.department == 'OS' %}selected{% endif %}>Отдел снабжения (ОС)</option>
+                <option value="ORP" {% if request.GET.department == 'ORP' %}selected{% endif %}>Отдел по работе с персоналом (ОРП)</option>
+                <option value="FEO" {% if request.GET.department == 'FEO' %}selected{% endif %}>Финансово-экономический отдел (ФЭО)</option>
+                <option value="OHR" {% if request.GET.department == 'OHR' %}selected{% endif %}>Охрана труда (ОТ)</option>
+                <option value="PR" {% if request.GET.department == 'PR' %}selected{% endif %}>Пресс-служба (PR)</option>
+            </select>
+            <select name="status" class="form-select" aria-label="Выберите статус" style="max-width: 300px; flex-grow: 1;">
+                <option value="">Все статусы</option>
+                <option value="new" {% if request.GET.status == 'new' %}selected{% endif %}>Новая</option>
+                <option value="in_processing" {% if request.GET.status == 'in_processing' %}selected{% endif %}>В обработке</option>
+                <option value="accept" {% if request.GET.status == 'accept' %}selected{% endif %}>Принята</option>
+                <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Отклонена</option>
+            </select>
+            {% else %}
+            <div class="container" style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+            <form method="get" action="{% url 'feedback:all_offers' %}" class="d-flex mb-2" style="flex-wrap: wrap; gap: 20px; justify-content: center;"></form>
+            <select name="status" class="form-select" aria-label="Выберите статус" style="max-width: 300px; flex-grow: 1;">
+                <option value="">Все статусы</option>
+                <option value="new" {% if request.GET.status == 'new' %}selected{% endif %}>Новая</option>
+                <option value="in_processing" {% if request.GET.status == 'in_processing' %}selected{% endif %}>В обработке</option>
+                <option value="accept" {% if request.GET.status == 'accept' %}selected{% endif %}>Принята</option>
+                <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Отклонена</option>
+            </select>
+            </div>
+            <div style="margin-top: 20px;"></div><!-- Отступ сверху -->
+            {% endif %}
+            <div class="container" style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+                <div class="form-group">
+                    <label for="start_date">С</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ request.GET.start_date }}" aria-label="Начальная дата" style="max-width: 200px;">
+                </div>
+                <div class="form-group">
+                    <label for="end_date">По</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ request.GET.end_date }}" aria-label="Конечная дата" style="max-width: 200px;">
+                </div>
+            </div>
+            <div class="container" style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="anonymous" id="anonymous" {% if request.GET.anonymous %}checked{% endif %}>
+                    <label class="form-check-label" for="anonymous">Анонимные пользователи</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="not_anonymous" id="not_anonymous" {% if request.GET.not_anonymous %}checked{% endif %}>
+                    <label class="form-check-label" for="not_anonymous">Неанонимные пользователи</label>
+                </div>
+            </div>
+            </div>
+            <div class="d-flex mt-2">
+                <button type="submit" class="btn btn-info me-2">Фильтровать</button>
+                <a href="{% url 'feedback:all_offers' %}" class="btn btn-secondary">Сбросить фильтр</a>
+            </div>
+        </form>
+        <!-- <form method="get" id="exportForm" action="{% url 'feedback:export_users_xls' %}">
+            <input type="hidden" name="department" value="{{ request.GET.department }}">
+            <input type="hidden" name="status" value="{{ request.GET.status }}">
+            <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
+            <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+            <input type="hidden" name="anonymous" value="{{ request.GET.anonymous }}">
+            <input type="hidden" name="not_anonymous" value="{{ request.GET.not_anonymous }}">
+            <button type="submit" class="btn btn-success">Выгрузить в файл Excel</button>
+        </form> -->
+        
+        </div>
+
+    {% if success_message %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ success_message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+    
+    {% if error_message %}
+        <div class="alert alert-danger lert-dismissible fade show" role="alert">
+            {{ error_message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <div class="list-group">
+        {% for offer in offers %}
+            <div class="list-group-item mb-5 border"> <!-- Добавлен отступ между заявками -->
+                <div class="d-flex flex-column">
+                    {% if offer.author %}
+                    <div style="color: olive; font-family: 'Times New Roman', Times, serif; font-size: large;">
+                        Автор: <strong>{{ offer.author.first_name }} {{ offer.author.last_name }} ({{ offer.author.email }})</strong>
+                    </div>
+                    {% else %}
+                    <div style="color: olive; font-family: 'Times New Roman', Times, serif; font-size: large;">
+                        Автор: <strong>Аноним</strong>
+                    </div> 
+                    {% endif %}
+                    <div style="color: brown; font-family: 'Times New Roman', Times, serif; font-size: large;">
+                        Тема: <strong>{{ offer.topic }}</strong>
+                    </div> 
+                    <div></div>
+                    <div style="color: darkslategrey; font-family: 'Times New Roman', Times, serif; font-size: large;">
+                        Статус:
+                        <span class="status-indicator 
+                            {% if offer.status == 'new' %}
+                                status-new
+                            {% elif offer.status == 'in_processing' %}
+                                status-in-processing
+                            {% elif offer.status == 'accept' %}
+                                status-accepted
+                            {% elif offer.status == 'rejected' %}
+                                status-rejected
+                            {% else %}
+                                status-default
+                            {% endif %}
+                        "></span>
+                        <span><strong>
+                            {% if offer.status == 'new' %}
+                                Новая
+                            {% elif offer.status == 'in_processing' %}
+                                В обработке
+                            {% elif offer.status == 'accept' %}
+                                Принята
+                            {% elif offer.status == 'rejected' %}
+                                Отклонена
+                            {% else %}
+                                Не указан
+                            {% endif %}
+                        </strong>
+                        </span>
+                    </div>
+                    <div style="color: rgb(0, 88, 139); font-family: 'Times New Roman', Times, serif; font-size: large;">
+                        Номер предложения: {{ offer.id }}
+                    </div>
+                    <div style="color: darkslategray; font-family: 'Times New Roman', Times, serif; font-size: large;">
+                        Опубликовано: {{ offer.pub_date|date:"d.m.Y H:i" }}
+                    </div>
+                </div>
+                <p class="mt-4" style="font-family: 'Georgia', Times, serif; font-size: large;">{{ offer.description|truncatechars:100 }}</p>
+                
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'feedback:offer' offer.id %}" class="btn btn-primary btn-sm">Просмотреть полностью</a>
+                    
+                    {% if request.user == offer.author or request.user.role == 'admin' or request.user.is_superuser %}
+                    <div class="d-flex ms-3"> <!-- Добавлен отступ между кнопками -->
+                        <a href="{% url 'feedback:offer_edit' offer.id  %}" class="btn btn-warning btn-sm">Редактировать</a>
+                        <a href="{% url 'feedback:offer_delete' offer.id  %}" class="btn btn-danger btn-sm ms-2">Удалить</a>
+                    </div>
+                    {% endif %}
+                </div>                
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination Section -->
+    <div class="row mt-4">
+        <div class="col-md-12 d-flex justify-content-end">
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+<script>
+    // Скрытие/показ панели фильтрации
+    document.getElementById('filterBtn').addEventListener('click', function() {
+        const panel = document.getElementById('filterPanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const exportForm = document.getElementById('exportForm');
+
+    // Проверим, есть ли в URL параметры фильтра
+    const urlParams = new URLSearchParams(window.location.search);
+    const department = urlParams.get('department');
+    const status = urlParams.get('status');
+    const startDate = urlParams.get('start_date');
+    const endDate = urlParams.get('end_date');
+    const anonymous = urlParams.get('anonymous');
+    const notAnonymous = urlParams.get('not_anonymous');
+
+    // Условие, при котором показывается кнопка "Export to Excel"
+    const anyFilterApplied = department || status || startDate || endDate || anonymous || notAnonymous;
+    exportForm.style.display = anyFilterApplied ? 'block' : 'none';
+
+    // Далее добавим обработку изменений фильтров
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.addEventListener('change', function () {
+            // Проверим, были ли применены фильтры
+            const department = filterForm.querySelector('select[name="department"]').value;
+            const status = filterForm.querySelector('select[name="status"]').value;
+            const startDate = filterForm.querySelector('input[name="start_date"]').value;
+            const endDate = filterForm.querySelector('input[name="end_date"]').value;
+            const anonymous = filterForm.querySelector('input[name="anonymous"]').checked;
+            const notAnonymous = filterForm.querySelector('input[name="not_anonymous"]').checked;
+
+            // Показываем/скрываем кнопку на основе изменений
+            const anyFilterApplied = department || status || startDate || endDate || anonymous || notAnonymous;
+            exportForm.style.display = anyFilterApplied ? 'block' : 'none';
+        });
+    }
+});
+</script>
+</body>
+</html>

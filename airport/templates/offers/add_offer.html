@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  {% include 'includes/head.html' %}
+  <style>
+    .feedback-form {
+      margin-top: 20px;
+      margin-bottom: 40px;
+    }
+
+    .file-input-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .custom-file-label {
+      display: inline-block;
+      padding: 6px 12px;
+      margin: 0;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.42857143;
+      color: #333;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 5px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .btn-container {
+      margin-top: 20px;
+    }
+
+    input[type="file"] {
+  display: none;
+}
+  </style>
+</head>
+<body>
+  <header>
+    {% include 'includes/header.html' %}
+    {% block title %}
+    <title>Создание нового предложения | Сервис обратной связи</title>
+    {% endblock %}
+  </header>
+
+  <div class="container feedback-form">
+    <h4 style="margin-bottom: 20px;">Создание нового предложения</h4>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="id_topic">Приведите название темы:</label>
+        <label for="id_topic" style="color: red;">  *Это обязательное поле</label>
+        <input type="text" class="form-control" id="id_topic" name="topic" required>
+      </div>
+      
+      <!-- Поле для ввода описания -->
+      <div class="form-group">
+        <label for="id_description">Описание предложения:</label>
+        <label for="id_description" style="color: red;">  *Это обязательное поле</label>
+        <textarea class="form-control" id="id_description" name="description" rows="3" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="id_department">Выберите отдел, который относится к теме:</label>
+        <select class="form-select" id="id_department" name="department">
+          <option value="empty" selected>Не выбрано</option>
+          <option value="accept">Здравпункт</option>
+          <option value="KD">Коммерческая дирекция (КД)</option>
+          <option value="OS">Отдел снабжения (ОС)</option>
+          <option value="ORP">Отдел по работе с персоналом (ОРП)</option>
+          <option value="FEO">Финансово-экономический отдел (ФЭО)</option>
+          <option value="OHR">Охрана труда (ОТ)</option>
+          <option value="PR">Пресс-служба (PR)</option>
+        </select>
+      </div>      
+      <div style="margin-top: 20px;"> <!-- Отступ сверху -->
+      <!-- Поле для выбора файла -->
+      <div class="form-group file-input-container">
+        <label for="id_file">Файл:</label>
+        <label for="id_file" class="custom-file-label" id="file-label">Выберите файл (pptx, docx, doc, xlsx, pdf):</label>
+        <input type="file" id="id_file" name="file" accept=".pptx,.docx,.doc,.xlsx,.pdf" onchange="updateFileName();">
+      </div>
+      <div class="form-group">
+        <label for="id_anonymous">Отправить анонимно: </label>
+        <input type="checkbox" id="id_anonymous" style="transform: scale(1.4); margin-left: 5px;" name="anonymous">
+    </div>
+    
+
+      <!-- Кнопка для отправки формы -->
+      <div class="btn-container">
+        <button type="submit" class="btn btn-success">Отправить</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Функция для обновления имени выбранного файла в label
+    function updateFileName() {
+      var input = document.getElementById('id_file');
+      var fileName = input.files.length ? input.files[0].name : '';
+      document.getElementById('file-label').textContent = fileName ? 'Выбранный файл: ' + fileName : 'Выберите файл (pptx, docx, doc, xlsx, pdf):';
+    }
+  </script>
+</body>
+</html>

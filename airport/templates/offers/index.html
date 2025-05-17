@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  {% load static %}
+  {% include 'includes/head.html' %}
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      background-size: cover; /* Изменил для лучшего отображения */
+    }
+
+    main {
+      flex: 1; /* Главный контент растягивается на оставшееся пространство */
+    }
+
+    img {
+  border: none;  /* Убирает рамку */
+  outline: none; /* Убирает внешнюю обводку */
+  margin: 0;     /* Убирает внешние отступы */
+}
+.card-header {
+    background-color: lightsteelblue;
+    color: darkslategray; /* Белый текст */
+    font-weight: bold; /* Сделать текст жирным */
+  }
+
+  .card-body {
+    color: black; /* Белый текст в теле карточки */
+    background-color: lightsteelblue; /* Черный фон */
+  }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- Здесь разместите содержимое вашей шапки сайта -->
+    {% include 'includes/header.html' %}
+    {% block title %}
+    <title>Сервис обратной связи сотрудников</title>
+    {% endblock title %}
+  </header>
+  <main>
+    <div class="container py-5">
+      <div style="margin-top: 200px;"> <!-- Отступ сверху -->
+      <div class="row justify-content-center">
+        <div class="col-md-8 p-5">
+          <div class="card">
+            <div class="card-body" align="center">
+              <p style="font-family:Georgia, 'Times New Roman', Times, serif; font-size: large;">Добро пожаловать! На этом сайте вы можете оставлять свои предложения по улучшению работы служб.</p>
+              <div style="margin-top: 70px;"> <!-- Отступ сверху -->
+              <p style="font-family:Georgia, 'Times New Roman', Times, serif; font-size: large;">Для отправки предложений необходимо зарегистрироваться и авторизоваться.</p>
+            </div> <!-- card body -->
+          </div> <!-- card -->
+        </div> <!-- col -->
+      </div> <!-- row -->
+    </div> <!-- container -->
+  </main>
+</body>
+</html>

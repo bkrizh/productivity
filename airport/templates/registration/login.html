@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  {% include 'includes/head.html' %}
+  {% load static %}
+  <style>
+    .card {
+  background-color: #f2f2f2; /* Замените #f2f2f2 на нужный вам цвет */
+  border: 1px solid #ccc; /* Добавление границы для отображения элемента */
+}
+
+/* Изменение цвета для .card-header */
+.card-header {
+  background-color: #356; /* Замените #333 на нужный вам цвет */
+  color: #000; /* Изменение цвета текста внутри .card-header */
+}
+html, body {
+      height: 100%;
+      margin: 0;
+    }
+body {
+  display: flex;
+  flex-direction: column;
+  background-image: url("{% static 'img/background.jpg' %}");
+  background-size: cover; /* Изменил для лучшего отображения */
+}
+main {
+      flex: 1; /* Главный контент растягивается на оставшееся пространство */
+    }
+    .verify-container {
+            max-width: 500px;
+            margin: 10px auto;
+            padding: 10px;
+            background-color: rgb(255, 255, 255);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- Здесь разместите содержимое вашей шапки сайта -->
+    {% include 'includes/header.html' %}
+    {% block title %}
+    <title>Вход | Сервис обратной связи</title>
+    {% endblock title %}
+  </header>
+<div class="container py-3">
+  <div style="margin-top: 200px;"> <!-- Отступ сверху -->
+    <div class="row justify-content-center">
+      <div class="col-md-8 p-5">
+        <div class="card">
+          <div class="card-header" >
+            <h4 style="text-align: center;  margin-top: 10px;">Вход на сайт</h6>
+          </div>
+          <div class="verify-container">
+            {% if form.errors %}
+                {% for field in form %}
+                  {% for error in field.errors %}            
+                    <div class="alert alert-danger">
+                      {{ error|escape }}
+                    </div>
+                  {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                  <div class="alert alert-danger">
+                    {{ error|escape }}
+                  </div>
+                {% endfor %}
+            {% endif %}
+  
+            <form id="myForm" method="post" onsubmit="return validateForm(this);">
+              {% if action_url %}
+                action="{% url action_url %}"
+              {% endif %}
+            {% csrf_token %}
+  
+            {% for field in form %}
+              <div class="form-group row my-3" style="font-family:Georgia, 'Times New Roman', Times, serif; font-size: large; text-align: center;"
+                {% if field.field.required %} 
+                  aria-required="true"
+                {% else %}
+                  aria-required="false"
+                {% endif %}
+              >
+                <label for="{{ field.id_for_label }}">
+                  {{ field.label }}
+                    {% if field.field.required %}
+                      <span class="required text-danger">*</span>
+                    {% endif %}
+                </label>
+                <div>
+                {{ field }}
+                  {% if field.help_text %}
+                    <small id="{{ field.id_for_label }}-help" class="form-text text-muted">
+                      {{ field.help_text|safe }}
+                    </small>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+            <div class="text-center">
+              <button type="submit" id="submitButton" class="btn btn-primary">Войти</button>
+            </div>
+            </form>
+            <script>
+              function validateForm(form) {
+                if (!isValid(form)) {
+                  event.preventDefault();
+                  return false;
+                }
+                
+                disableButton(document.getElementById('submitButton'));
+                return true;
+              }
+              
+              function isValid(form) {
+                return true;
+                }
+              
+              function disableButton(button) {
+                  button.style.pointerEvents = "none";
+                  button.textContent = 'Вход...';
+                  button.disabled = true;
+                  button.form.submit();
+                  return false;
+        }
+            </script>
+          </div> <!-- card body -->
+          <div class="text-center mt-1">
+            <a href="{% url 'feedback:register' %}">Нет аккаунта? Зарегистрировать</a>
+        </div>
+        <div class="text-center mt-3">
+            <a href="{% url 'feedback:reset_password' %}">Забыли пароль? Восстановить</a>
+        </div>
+        </div> <!-- card -->
+      </div> <!-- col -->
+  </div> <!-- row -->
+</div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    {% include 'includes/head.html' %}
+</head>
+<body>
+  <header>
+    {% include 'includes/header.html' %}
+    {% block title %}
+    <title> {{ title }} </title>
+    {% endblock title %}
+  </header>
+  {% block content %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ error_message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endblock content %}
+</body>
+</html>

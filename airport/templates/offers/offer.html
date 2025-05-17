@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  {% include 'includes/head.html' %}
+  <style>
+    .feedback-details {
+      margin-top: 20px;
+      margin-bottom: 40px;
+    }
+
+    .file-info {
+      margin-top: 10px;
+    }
+
+    .file-input-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .custom-file-label {
+      display: inline-block;
+      padding: 6px 12px;
+      margin: 0;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.42857143;
+      color: #333;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 5px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .status-display {
+  display: flex;
+  align-items: center; /* Выравниваем индикатор и текст по вертикали */
+  position: relative;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: gray; /* По умолчанию серый */
+  margin-right: 5px; /* Отступ между индикатором и текстом */
+}
+
+.status-display[data-status="new"] .status-indicator {
+  background-color: red;
+}
+
+.status-display[data-status="in_processing"] .status-indicator {
+  background-color: orange;
+}
+
+.status-display[data-status="accept"] .status-indicator {
+  background-color: green;
+}
+
+.status-display[data-status="rejected"] .status-indicator {
+  background-color: darkgray;
+}
+
+.status-text {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+
+
+  </style>
+</head>
+<body>
+  <header>
+    {% include 'includes/header.html' %}
+    {% block title %}
+    <title>Детали предложения | Сервис обратной связи</title>
+    {% endblock %}
+  </header>
+
+  <div class="container feedback-details">
+    <h4 style="margin-bottom: 20px;">Детали предложения №{{offer.id}}</h4>
+    <form method="post">
+      {% csrf_token %}
+      
+      <!-- Поле автор -->
+      <div class="form-group">
+        <label for="author">Автор:</label>
+        {% if offer.author %}
+        <input type="text" class="form-control" id="author" value="{{ offer.author.first_name }} {{ offer.author.last_name }} ({{ offer.author.email }})" readonly>
+        {% else %}
+        <input type="text" class="form-control" id="author" value="Аноним" readonly>
+        {% endif %}
+      </div>
+
+      <!-- Поле дата добавления -->
+      <div class="form-group">
+        <label for="pub_date">Дата добавления:</label>
+        <input type="text" class="form-control" id="pub_date" value="{{ offer.pub_date|date:'d M Y, H:i' }}" readonly>
+      </div>
+
+      <!-- Поле описание -->
+      <div class="form-group">
+        <label for="description">Описание:</label>
+        <textarea class="form-control" style="font-family: 'Georgia', Times, serif; font-size: large;" id="description" rows="3" readonly>{{ offer.description }}</textarea>
+      </div>
+
+      <!-- Поле тема -->
+      <div class="form-group">
+        <label for="topic">Тема:</label>
+        <input type="text" class="form-control" id="topic" value="{{ offer.topic }}" readonly>
+      </div>
+
+      <!-- Поле отдел -->
+      <div class="form-group">
+        <label for="department">Отдел, относящийся к теме:</label>
+        <input type="text" class="form-control" id="department" value="{{ offer.get_department_display }}" readonly>
+      </div>
+
+<!-- Поле статус -->
+<div class="form-group">
+  <label for="status">Статус:</label>
+  <div class="input-container">
+    <div class="status-display" id="status" data-status="{{ offer.status }}">
+      <span class="status-indicator"></span>
+      <span class="status-text">{{ offer.get_status_display }}</span>
+    </div>
+  </div>
+</div>
+
+
+      <!-- Поле файл (если есть) -->
+      {% if offer.file %}
+      <div class="form-group file-input-container">
+        <label for="file">Прикрепленный файл:</label>
+        <a href="{% url 'feedback:offer_document_download' offer.pk %}" class="btn btn-secondary">{{ offer.file.name }}</a>
+      </div>
+      {% else %}
+      <div class="form-group">
+        <label>Прикрепленный файл:</label>
+        <p>Нет прикрепленных файлов</p>
+      </div>
+      {% endif %}
+
+      <!-- Кнопка "Назад к предложениям" -->
+      {% if request.user == offer.author %}
+      <a href="{% url 'feedback:offers' %}" class="btn btn-primary mt-4">Назад к предложениям</a>
+      {% else %}
+      <a href="{% url 'feedback:all_offers' %}" class="btn btn-primary mt-4">Назад к предложениям</a>
+      {% endif %}
+
+      {% if request.user.role == 'admin' or request.user == offer.author or request.user.is_superuser %}
+      <a href="{% url 'feedback:offer_edit' offer.id  %}" class="btn btn-warning mt-4 ms-5">Редактировать</a>
+      <a href="{% url 'feedback:offer_delete' offer.id  %}" class="btn btn-danger mt-4 ms-3">Удалить</a>
+      {% endif %}
+
+      {% if request.user.role == 'admin' or request.user.is_superuser %}
+      <a href="{% url 'feedback:export_user_xls' offer.id  %}" class="btn btn-dark mt-4 ms-5">Выгрузить в Excel</a>
+      {% endif %}
+    </form>
+  </div>
+</body>
+</html>

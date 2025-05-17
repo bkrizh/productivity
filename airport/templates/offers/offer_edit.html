@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  {% include 'includes/head.html' %}
+  <style>
+    .feedback-details {
+      margin-top: 20px;
+      margin-bottom: 40px;
+    }
+
+    .file-info {
+      margin-top: 10px;
+    }
+
+    .file-input-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+        input[type="file"] {
+      display: none;
+    }
+
+    .custom-file-label {
+      display: inline-block;
+      padding: 6px 12px;
+      margin: 0;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.42857143;
+      color: #333;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 5px;
+    }
+
+    .file-input-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .status-display {
+  display: flex;
+  align-items: center; /* Выравниваем индикатор и текст по вертикали */
+  position: relative;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: gray; /* По умолчанию серый */
+  margin-right: 10px; /* Отступ между индикатором и текстом */
+}
+
+.status-display[data-status="new"] .status-indicator {
+  background-color: red;
+}
+
+.status-display[data-status="in_processing"] .status-indicator {
+  background-color: orange;
+}
+
+.status-display[data-status="accept"] .status-indicator {
+  background-color: green;
+}
+
+.status-display[data-status="rejected"] .status-indicator {
+  background-color: darkgray;
+}
+
+.status-text {
+  font-size: 16px;
+  font-weight: 500;
+}
+  </style>
+</head>
+<body>
+  <header>
+    {% include 'includes/header.html' %}
+    {% block title %}
+    <title>Редактирование предложения | Сервис обратной связи</title>
+    {% endblock %}
+  </header>
+
+  <div class="container feedback-details">
+    <h4 style="margin-bottom: 20px;">Редактирование предложения №{{offer.id}}</h4>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <!-- Поле автор -->
+      <div class="form-group">
+        <label for="author">Автор:</label>
+        {% if offer.author %}
+        <input type="text" class="form-control" id="author" value="{{ offer.author.first_name }} {{ offer.author.last_name }} ({{ offer.author.email }})" readonly>
+        {% else %}
+        <input type="text" class="form-control" id="author" value="Аноним" readonly>
+        {% endif %}
+      </div>
+
+      <!-- Поле дата добавления (только для просмотра) -->
+      <div class="form-group">
+        <label for="pub_date">Дата добавления:</label>
+        <input type="text" class="form-control" id="pub_date" value="{{ offer.pub_date|date:'d M Y, H:i' }}" readonly>
+      </div>
+
+      <!-- Поле описание (можно редактировать) -->
+      <div class="form-group">
+        <label for="description">Описание:</label>
+        <textarea class="form-control" style="font-family: 'Georgia', Times, serif; font-size: large;" id="description" rows="3" name="description">{{ offer.description }}</textarea>
+      </div>
+
+      <!-- Поле тема (можно редактировать) -->
+      <div class="form-group">
+        <label for="topic">Тема:</label>
+        <input type="text" class="form-control" id="topic" name="topic" value="{{ offer.topic }}">
+      </div>
+
+      <!-- Поле отдел (можно редактировать) -->
+      <div class="form-group">
+        <label for="id_department">Выберите отдел, который относится к теме:</label>
+        <select class="form-control" id="id_department" name="department">
+            <option value="empty" {% if offer.department == 'empty' %}selected{% endif %}>Не выбрано</option>
+            <option value="accept" {% if offer.department == 'accept' %}selected{% endif %}>Здравпункт</option>
+            <option value="KD" {% if offer.department == 'KD' %}selected{% endif %}>Коммерческая дирекция (КД)</option>
+            <option value="OS" {% if offer.department == 'OS' %}selected{% endif %}>Отдел снабжения (ОС)</option>
+            <option value="ORP" {% if offer.department == 'ORP' %}selected{% endif %}>Отдел по работе с персоналом (ОРП)</option>
+            <option value="FEO" {% if offer.department == 'FEO' %}selected{% endif %}>Финансово-экономический отдел (ФЭО)</option>
+            <option value="OHR" {% if offer.department == 'OHR' %}selected{% endif %}>Охрана труда (ОТ)</option>
+            <option value="PR" {% if offer.department == 'PR' %}selected{% endif %}>Пресс-служба (PR)</option>
+        </select>        
+      </div>
+
+      {% if request.user.role == 'admin' or request.user.is_superuser %}
+      <div class="form-group">
+        <label for="status">Статус:</label>
+        <select class="form-control" id="status" name="status">
+            <option value="new" {% if offer.status == 'new' %}selected{% endif %}>Новая</option>
+            <option value="in_processing" {% if offer.status == 'in_processing' %}selected{% endif %}>В обработке</option>
+            <option value="accept" {% if offer.status == 'accept' %}selected{% endif %}>Принята</option>
+            <option value="rejected" {% if offer.status == 'rejected' %}selected{% endif %}>Отклонена</option>
+        </select>
+    </div>
+
+    {% else %}
+          <!-- Поле статус (можно редактировать) -->
+          <!-- Поле статус -->
+    <div class="form-group">
+      <label for="status">Статус:</label>
+      <div class="input-container">
+        <div class="status-display" id="status" data-status="{{ offer.status }}">
+          <span class="status-indicator"></span>
+          <span class="status-text">{{ offer.get_status_display }}</span>
+        </div>
+      </div>
+    </div>
+
+    
+    {% endif %}
+
+      <!-- Поле файл (если есть, только для просмотра) -->
+      {% if offer.file %}
+      <div class="form-group file-input-container">
+        <label for="file">Прикрепленный файл:</label>
+        <a href="{% url 'feedback:offer_document_download' offer.pk %}" class="btn btn-secondary" style="margin-bottom: 10px;">{{ offer.file.name }}</a>
+        <label for="id_file" class="custom-file-label" id="file-label">Выберите файл (pptx, docx, doc, xlsx, pdf):</label>
+        <input type="file" id="id_file" name="file" accept=".pptx,.docx,.doc,.xlsx,.pdf" onchange="updateFileName();">
+      </div>
+      {% else %}
+      <div class="form-group file-input-container">
+        <p>Нет прикрепленных файлов</p>
+        <label for="id_file" class="custom-file-label" id="file-label">Выберите файл (pptx, docx, doc, xlsx, pdf):</label>
+        <input type="file" id="id_file" name="file" accept=".pptx,.docx,.doc,.xlsx,.pdf" onchange="updateFileName();">
+      </div>
+      {% endif %}
+
+      <!-- Кнопка для сохранения изменений -->
+      <button type="submit" class="btn btn-success mt-4 ">Сохранить изменения</button>
+
+      {% if request.user.role == 'admin' or request.user == offer.author or request.user.is_superuser %}
+      <a href="{% url 'feedback:offer_delete' offer.id  %}" class="btn btn-danger mt-4 ms-5">Удалить</a>
+      {% endif %}
+
+      <!-- Кнопка "Назад к предложениям" -->
+      {% if request.user == offer.author %}
+      <a href="{% url 'feedback:offers' %}" class="btn btn-primary mt-4 ms-3">Назад к предложениям</a>
+      {% else %}
+      <a href="{% url 'feedback:all_offers' %}" class="btn btn-primary mt-4 ms-3">Назад к предложениям</a>
+      {% endif %}
+      {% if request.user.role == 'admin' or request.user.is_superuser %}
+      <a href="{% url 'feedback:export_user_xls' offer.id  %}" class="btn btn-dark mt-4 ms-5">Выгрузить в Excel</a>
+      {% endif %}
+    </form>
+  </div>
+  <script>
+    // Функция для обновления имени выбранного файла в label
+    function updateFileName() {
+      var input = document.getElementById('id_file');
+      var fileName = input.files.length ? input.files[0].name : '';
+      document.getElementById('file-label').textContent = fileName ? 'Выбранный файл: ' + fileName : 'Выберите файл (pptx, docx, doc, xlsx, pdf):';
+    }
+  </script>
+</body>
+</html>

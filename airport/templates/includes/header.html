@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+  {% include 'includes/head.html' %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<style>
+  .navbar {
+        padding-top: 1rem; /* Уменьшаем верхний отступ */
+        padding-bottom: 1rem; /* Уменьшаем нижний отступ */
+      }
+
+      /* Предотвращаем перенос текста в слове "МАВ" */
+      .navbar .navbar-brand span {
+        white-space: nowrap; /* Запрещаем перенос строки */
+      }
+      
+  .navbar .nav-link {
+  color: white; /* Цвет для обычного состояния */
+}
+
+.navbar .nav-link.active {
+  color: #fff !important; /* Цвет для активного состояния */
+  background-color: darkblue !important; /* Цвет фона для активного состояния */
+  border-radius: 0.25rem; /* Радиус скругления для фона (по желанию) */
+}
+
+  /* Сделаем кнопку "Выйти" больше */
+  .dropdown-menu {
+    border-radius: 0.5rem;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: darkblue;
+    animation: slideIn 0.3s ease-out;
+    min-width: 90px; /* Минимальная ширина меню */
+    max-width: 90px; /* Ограничиваем максимальную ширину меню */
+    overflow: hidden; /* Предотвращаем расширение и скрываем излишки */
+    text-align: center;
+  }
+
+    /* Стилизация кнопки "Выйти" */
+    .dropdown-menu .dropdown-item {
+    color: white; /* Цвет текста по умолчанию */
+    background-color: darkblue; /* Цвет фона по умолчанию */
+  }
+
+  /* Стилизация кнопки "Выйти" при наведении */
+  .dropdown-menu .dropdown-item:hover {
+    color: #28b7c7 !important; /* Замените на желаемый цвет текста */
+  }
+</style>
+
+
+<div class="container-fluid p-0">
+        <header class="navbar d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom" style="background-color: blueviolet">
+          <a href="/" class="d-flex align-items-center col-md-3 mb-2 mb-md-0 text-dark text-decoration-none">
+            {% load static %}
+            <span style="color: #28b7c7; font-family: 'TimesNewRoman', monospace; font-size: rem; font-weight: bold; padding-left: 6px;" class="fs-5">Обратная связь</span>
+          </a>
+          {% if request.user.is_authenticated %}
+          {% if request.user.is_superuser or request.user.role == 'admin' or request.user.department != 'empty' %}
+          {% with request.resolver_match.view_name as view_name %}
+            <ul class="col-12 col-md-auto mb-2 justify-content-center mb-md-0 nav nav-pills">
+              <li class="nav-item"><a class="nav-link {% if view_name  == 'feedback:index' %}active{% endif %}" href="{% url 'feedback:index' %}">Главная</a></li>
+              <li class="nav-item"><a class="nav-link {% if view_name  == 'feedback:offers' %}active{% endif %}" href="{% url 'feedback:offers' %}">Мои предложения</a></li>
+              <li class="nav-item"><a class="nav-link {% if view_name  == 'feedback:all_offers' %}active{% endif %}" href="{% url 'feedback:all_offers' %}">Все предложения</a></li>
+              {% if request.user.is_superuser or request.user.role == 'admin'%}
+              <li class="nav-item"><a class="nav-link {% if view_name  == 'feedback:recipients_list' %}active{% endif %}" href="{% url 'feedback:recipients_list' %}">Получатели уведомлений</a></li>
+              {% endif %}
+            </ul>
+      
+            <ul class="nav nav-pills text-end">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  {{ request.user.first_name }} {{ request.user.last_name }}<!-- Имя пользователя -->
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li>
+                    <form action="{% url 'users:logout' %}" method="post" >
+                      {% csrf_token %}
+                      <button type="submit" class="dropdown-item" style="color:white; border:none; padding:0; cursor:pointer;">
+                        Выйти
+                      </button>
+                    </form>
+                  </li>
+                </ul>
+              </li>            
+            </ul>
+            {% endwith %}
+            {% endif %}
+            {% endif %}
+
+        {% if request.user.is_authenticated and request.user.role == 'empty' and request.user.department == 'empty' and not request.user.is_superuser %}
+        {% with request.resolver_match.view_name as view_name %}
+          <ul class="col-12 col-md-auto mb-2 justify-content-center mb-md-0 nav nav-pills">
+            <li class="nav-item"><a class="nav-link {% if view_name  == 'feedback:index' %}active{% endif %}" href="{% url 'feedback:index' %}">Главная</a></li>
+            <li class="nav-item"><a class="nav-link {% if view_name  == 'feedback:offers' %}active{% endif %}" href="{% url 'feedback:offers' %}">Мои предложения</a></li>
+          </ul>
+    
+          <ul class="nav nav-pills text-end">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ request.user.first_name }} {{ request.user.last_name }}<!-- Имя пользователя -->
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li>
+                  <form action="{% url 'users:logout' %}" method="post" >
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item" style="color:white; border:none; padding:0; cursor:pointer;">
+                      Выйти
+                    </button>
+                  </form>
+                </li>
+              </ul>
+            </li>            
+          </ul>
+          {% endwith %}
+        {% endif %}
+
+{% if not request.user.is_authenticated  %}
+{% with request.resolver_match.view_name as view_name %}
+  <ul class="col-12 col-md-auto justify-content-center mb-md-0 nav nav-pills">
+    <li class="nav-item"><a class="nav-link {% if view_name == 'feedback:index' %}active{% endif %}" href="{% url 'feedback:index' %}">Главная</a></li>
+  </ul>
+
+  <ul class="nav nav-pills text-end">
+    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}" href="{% url 'users:login' %}">Вход</a></li>
+  </ul>
+{% endwith %}
+{% endif %}
+</header>
+</div>
+</html>
