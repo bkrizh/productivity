@@ -134,6 +134,5 @@ dmypy.json
 *.code-workspace
 .vscode
 
-# Папки со статикой и медиа
-static/
+# Папки с медиа
 media/
